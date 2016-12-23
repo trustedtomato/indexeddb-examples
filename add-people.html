@@ -1,0 +1,49 @@
+<label for="name">Name: </label><input id="name">
+<label for="pet">Pet: </label><input id="pet">
+<button id="add">Add</button>
+<span id="output"></span>
+
+<script>
+	
+	var nameInput = document.getElementById('name');
+	var petInput = document.getElementById('pet');
+	var addButton = document.getElementById('add');
+
+
+	var openRequest = indexedDB.open('people-data', 1);
+	
+	openRequest.onupgradeneeded = function(e){
+		var db = e.target.result;
+		if(!db.objectStoreNames.contains('people')){
+			db.createObjectStore('people',{autoIncrement: true});
+		}
+	};
+
+	openRequest.onsuccess = function(e){
+		console.log('Successfully opened the database!');
+
+		var db = e.target.result;
+		db.onerror = function(){
+			console.log('Error');
+		};
+
+		addButton.addEventListener('click',function(){
+			var name = nameInput.value;
+			var pet = petInput.value;
+			console.log('About to add '+name+'/'+pet+'...');
+
+			var transaction = db.transaction(['people'],'readwrite');
+			var store = transaction.objectStore('people');
+
+			var person = {
+				name: name,
+				pet: pet
+			};
+			var request = store.add(person);
+
+			request.onsuccess = function(){
+				console.log('Addition completed!');
+			};
+		});	
+	};
+</script>
