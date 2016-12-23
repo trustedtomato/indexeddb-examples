@@ -1,0 +1,41 @@
+<input type="color" id="input">
+
+<script>
+	var input = document.getElementById('input');
+	var openRequest = indexedDB.open('store-preferences',1);
+
+	openRequest.onupgradeneeded = function(e){
+		var db = e.target.result;
+		var preferencesObjectStore = db.createObjectStore('preferences',{keyPath: 'name'});
+		preferencesObjectStore.createIndex('name','name',{unique: true});
+		console.log('Database upgraded!');
+	};
+	openRequest.onsuccess = function(e){
+		console.log('Database opened!');
+		
+		var db = e.target.result;
+		
+		var transaction = db.transaction(['preferences'],'readonly');
+		var store = transaction.objectStore('preferences');
+		var index = store.index('name');
+		var gettingTheme = index.get('theme');
+		gettingTheme.onsuccess = function(e){
+			var res = e.target.result;
+			if(res){
+				input.value = res.value;
+			}
+		};
+
+		input.onchange = function(){
+			var transaction = db.transaction(['preferences'],'readwrite');
+			var store = transaction.objectStore('preferences');
+			var request = store.put({
+				name: 'theme',
+				value: this.value
+			});
+			request.onsuccess = function(){
+				console.log('Preference has changed!');
+			};
+		};
+	};
+</script>
